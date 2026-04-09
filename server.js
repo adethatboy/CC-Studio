@@ -130,17 +130,52 @@ Output ONLY the SVG code — nothing else.`;
   }
 });
 
+// ─── /api/weavy-config ────────────────────────────────────────────────────
+// Returns the Weavy environment URL so the frontend can initialise wy-context.
+app.get('/api/weavy-config', (req, res) => {
+  const configured =
+    WEAVY_URL    !== 'YOUR_WEAVY_ENVIRONMENT_URL_HERE' &&
+    WEAVY_API_KEY !== 'YOUR_WEAVY_API_KEY_HERE';
+  res.json({ configured, weavyUrl: configured ? WEAVY_URL : null });
+});
+
 // ─── /api/weavy-token ─────────────────────────────────────────────────────
-// TODO: Replace the stub below with a real Weavy token request.
-// In production, authenticate the current user then call:
-//   POST {WEAVY_URL}/api/users/{userId}/tokens
-//   Authorization: Bearer {WEAVY_API_KEY}
-app.get('/api/weavy-token', (req, res) => {
-  if (WEAVY_API_KEY === 'YOUR_WEAVY_API_KEY_HERE') {
-    return res.json({ token: null, weavyUrl: null, configured: false });
+// Called automatically by the Weavy SDK (tokenurl attribute).
+// Must return { "access_token": "..." } — Weavy refreshes it as needed.
+// Requires Node 18+ for built-in fetch; run `node -v` to confirm.
+app.get('/api/weavy-token', async (req, res) => {
+  if (
+    WEAVY_URL     === 'YOUR_WEAVY_ENVIRONMENT_URL_HERE' ||
+    WEAVY_API_KEY === 'YOUR_WEAVY_API_KEY_HERE'
+  ) {
+    return res.status(401).json({ error: 'Weavy credentials not configured in server.js' });
   }
-  // Real implementation would go here
-  res.json({ token: 'STUB_TOKEN', weavyUrl: WEAVY_URL, configured: true });
+
+  try {
+    // Single shared user identity for all studio visitors.
+    const userId = 'cc-studio-user';
+
+    const response = await fetch(`${WEAVY_URL}/api/users/${userId}/tokens`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${WEAVY_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ expires_in: 3600 }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Weavy ${response.status}: ${text}`);
+    }
+
+    const data = await response.json();
+    // Return the shape the Weavy SDK expects
+    res.json({ access_token: data.access_token });
+  } catch (err) {
+    console.error('[/api/weavy-token]', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── Serve index.html for all other routes ────────────────────────────────

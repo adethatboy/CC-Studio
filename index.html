@@ -927,13 +927,13 @@ function closeWeavy() {
   weavyTab.style.right = '0';
 }
 
-// Fetch Weavy config once
+// Fetch Weavy environment URL once on load
 async function fetchWeavyCfg() {
   try {
-    const r = await fetch('/api/weavy-token');
+    const r = await fetch('/api/weavy-config');
     const d = await r.json();
     if (d.configured && d.weavyUrl) {
-      state.weavyCfg = d;
+      state.weavyCfg = d; // { configured, weavyUrl }
     }
   } catch { /* Weavy not configured */ }
 }
