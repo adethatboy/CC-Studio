@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CC Illustration Studio</title>
+
+  <!-- Weavy UIKit Web Components (loaded as ES module) -->
+  <script src="https://unpkg.com/@weavy/uikit-web@latest/dist/weavy.js" type="module"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════
+       RESET & ROOT
+    ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange:   #EC810F;
+      --orange-d: #D4720A;
+      --teal:     #125365;
+      --teal-d:   #0A3D4F;
+      --beige:    #F0EDE4;
+      --beige-d:  #E5E2D9;
+      --card-bg:  #FFFFFF;
+      --border:   #E0DDD4;
+      --text:     #1A1A1A;
+      --muted:    #888;
+      --radius:   16px;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--beige);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      color: var(--text);
+    }
+
+    /* ═══════════════════════════════════════════
+       APP SHELL
+    ═══════════════════════════════════════════ */
+    .app {
+      display: flex;
+      height: 100vh;
+      background: var(--beige);
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════ */
+    .sidebar {
+      width: 370px;
+      flex-shrink: 0;
+      padding: 16px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .sidebar-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      min-height: calc(100vh - 32px);
+    }
+
+    /* ─── Logo ─────────────────────────────── */
+    .cc-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cc-logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .cc-logo-text .t-covered  { font-size: 14px; font-weight: 800; color: var(--teal); letter-spacing: .2px; }
+    .cc-logo-text .t-ca       { font-size: 14px; font-weight: 800; color: var(--orange); letter-spacing: .2px; }
+
+    .logo-divider {
+      height: 1px;
+      background: var(--beige);
+      margin: -6px 0;
+    }
+
+    /* ─── Section ──────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 8px; }
+
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ─── Prompt textarea ──────────────────── */
+    textarea.prompt-input {
+      width: 100%;
+      min-height: 76px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      background: #FAFAF8;
+      resize: vertical;
+      transition: border-color .18s;
+      line-height: 1.5;
+    }
+    textarea.prompt-input::placeholder { color: #B5B2A8; }
+    textarea.prompt-input:focus { outline: none; border-color: var(--teal); background: #fff; }
+
+    /* ─── Pill buttons ─────────────────────── */
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .pill {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      color: #555;
+      font-size: 12.5px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .14s, border-color .14s, color .14s, transform .1s;
+      user-select: none;
+      line-height: 1.4;
+    }
+    .pill:hover            { border-color: var(--orange); color: var(--orange); }
+    .pill.active           { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+    .pill.active:hover     { background: var(--orange-d); border-color: var(--orange-d); }
+    .pill:active           { transform: scale(.96); }
+
+    /* ─── Strength slider ──────────────────── */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--teal);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background: var(--orange);
+      border: 3px solid #fff;
+      box-shadow: 0 1px 5px rgba(0,0,0,.25);
+      transition: transform .1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    input[type="range"]::-moz-range-thumb {
+      width: 21px; height: 21px;
+      border-radius: 50%;
+      background: var(--orange);
+      border: 3px solid #fff;
+      box-shadow: 0 1px 5px rgba(0,0,0,.25);
+    }
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3px;
+    }
+    .slider-meta span { font-size: 10px; color: var(--muted); }
+
+    /* ─── Generate button ──────────────────── */
+    .generate-btn {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--orange);
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .18s, transform .1s, opacity .18s;
+      letter-spacing: .2px;
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .generate-btn:hover   { background: var(--orange-d); }
+    .generate-btn:active  { transform: scale(.98); }
+    .generate-btn:disabled {
+      background: #C8C4BC;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .generate-btn.loading .btn-spinner { display: block; }
+    .generate-btn.loading .btn-label   { opacity: .75; }
+
+    /* ═══════════════════════════════════════════
+       CANVAS AREA
+    ═══════════════════════════════════════════ */
+    .canvas-area {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 16px 16px 0;
+    }
+
+    .canvas-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    /* Empty / SVG content */
+    .canvas-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .canvas-content svg {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+
+    /* Empty state */
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .empty-state .empty-icon { opacity: .45; }
+    .empty-state .empty-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #AAA8A0;
+    }
+    .empty-state .empty-sub {
+      font-size: 12px;
+      color: #C0BDB5;
+    }
+    .empty-state.hidden { display: none; }
+
+    /* Loading overlay */
+    .canvas-loading {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(240,237,228,.82);
+      backdrop-filter: blur(4px);
+      border-radius: 12px;
+      z-index: 20;
+    }
+    .canvas-loading.visible { display: flex; }
+    .big-spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(18,83,101,.15);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+    }
+    .canvas-loading p { font-size: 13px; font-weight: 600; color: var(--teal); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error banner */
+    .error-banner {
+      display: none;
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff0f0;
+      border: 1.5px solid #f5c0c0;
+      color: #c0392b;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      z-index: 30;
+      white-space: nowrap;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ─── Gallery strip ────────────────────── */
+    .gallery-strip {
+      height: 92px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 2px 4px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .gallery-strip::-webkit-scrollbar { height: 3px; }
+    .gallery-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .gallery-strip:empty::after {
+      content: 'Generated illustrations appear here';
+      font-size: 11px;
+      color: #C0BDB5;
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+
+    .gallery-item {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: #fff;
+      transition: border-color .15s, transform .15s, box-shadow .15s;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .gallery-item:hover  { border-color: var(--orange); transform: scale(1.04); box-shadow: 0 3px 10px rgba(0,0,0,.12); }
+    .gallery-item.active { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(236,129,15,.2); }
+
+    .gallery-thumb {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .gallery-thumb svg {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    .gallery-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: var(--teal);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+      min-width: 16px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* ═══════════════════════════════════════════
+       WEAVY PANEL
+    ═══════════════════════════════════════════ */
+    .weavy-panel {
+      width: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: width .28s cubic-bezier(.4,0,.2,1);
+      background: var(--card-bg);
+      border-left: 1.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .weavy-panel.open { width: 360px; }
+
+    .weavy-inner {
+      width: 360px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .weavy-header {
+      padding: 14px 18px;
+      border-bottom: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .weavy-header h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: .2px;
+    }
+    .weavy-uid-tag {
+      font-size: 10px;
+      color: #BBB;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      margin-top: 1px;
+    }
+    .weavy-close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #AAA;
+      font-size: 17px;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color .15s, background .15s;
+    }
+    .weavy-close-btn:hover { color: var(--text); background: var(--beige); }
+
+    .weavy-body { flex: 1; overflow: hidden; position: relative; }
+
+    .weavy-placeholder {
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .weavy-placeholder .ph-icon  { font-size: 36px; margin-bottom: 10px; }
+    .weavy-placeholder strong     { color: #555; display: block; margin-bottom: 6px; }
+    .weavy-placeholder code {
+      display: block;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #F4F2ED;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #888;
+      word-break: break-all;
+      text-align: left;
+    }
+
+    wy-context, wy-chat { display: block; height: 100%; }
+
+    /* ─── Weavy toggle tab ─────────────────── */
+    .weavy-tab {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      padding: 14px 7px;
+      border-radius: 9px 0 0 9px;
+      font-size: 11px;
+      font-weight: 700;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      cursor: pointer;
+      z-index: 100;
+      letter-spacing: 1.5px;
+      transition: right .28s cubic-bezier(.4,0,.2,1), background .15s;
+    }
+    .weavy-tab:hover { background: var(--teal-d); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-card">
+
+      <!-- Logo -->
+      <div class="cc-logo">
+        <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="22" fill="#125365"/>
+          <!-- shield outline -->
+          <path d="M22 8 C22 8 32 13 34 20 C36 27 32 34 22 38 C12 34 8 27 10 20 C12 13 22 8 22 8Z"
+                fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>
+          <!-- heart/cross mark -->
+          <path d="M22 16 C20 13.5 16 13.5 16 17.5 C16 21 22 26 22 26 C22 26 28 21 28 17.5 C28 13.5 24 13.5 22 16Z"
+                fill="#EC810F"/>
+          <!-- small wave -->
+          <path d="M14 31 Q18 28 22 31 Q26 34 30 31" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="cc-logo-text">
+          <span class="t-covered">Covered</span>
+          <span class="t-ca">California</span>
+        </div>
+      </div>
+
+      <div class="logo-divider"></div>
+
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-label">Prompt</div>
+        <textarea id="promptInput" class="prompt-input"
+          placeholder="A hand holding a phone..."></textarea>
+      </div>
+
+      <!-- Categories -->
+      <div class="section">
+        <div class="section-label">Categories</div>
+        <div class="pills" id="categoryPills">
+          <button class="pill" data-value="Family">Family</button>
+          <button class="pill" data-value="Journey">Journey</button>
+          <button class="pill active" data-value="Healthcare">Healthcare</button>
+          <button class="pill" data-value="Finances">Finances</button>
+          <button class="pill" data-value="California">California</button>
+        </div>
+      </div>
+
+      <!-- Strength -->
+      <div class="section">
+        <div class="section-label">Strength</div>
+        <input type="range" id="strengthSlider" min="0" max="100" value="50" />
+        <div class="slider-meta">
+          <span>Simple</span>
+          <span>Detailed</span>
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <div class="section">
+        <div class="section-label">Colors</div>
+        <div class="pills" id="colorPills">
+          <button class="pill" data-value="1">1</button>
+          <button class="pill" data-value="2">2</button>
+          <button class="pill active" data-value="3">3</button>
+          <button class="pill" data-value="4">4</button>
+          <button class="pill" data-value="5">5</button>
+          <button class="pill" data-value="6+">6+</button>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="section">
+        <div class="section-label">Background</div>
+        <div class="pills" id="bgPills">
+          <button class="pill active" data-value="fill">Fill</button>
+          <button class="pill" data-value="remove">Remove</button>
+        </div>
+      </div>
+
+      <!-- Size -->
+      <div class="section">
+        <div class="section-label">Size</div>
+        <div class="pills" id="sizePills">
+          <button class="pill active" data-value="16:9">16:9</button>
+          <button class="pill" data-value="9:16">9:16</button>
+          <button class="pill" data-value="3:4">3:4</button>
+          <button class="pill" data-value="4:3">4:3</button>
+          <button class="pill" data-value="1:1">1:1</button>
+        </div>
+      </div>
+
+      <!-- Download -->
+      <div class="section">
+        <div class="section-label">Download</div>
+        <div class="pills" id="downloadPills">
+          <button class="pill" id="dlSvg">SVG</button>
+          <button class="pill" id="dlPng">PNG</button>
+          <button class="pill" id="dlJpg">JPG</button>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <button class="generate-btn" id="generateBtn">
+        <span class="btn-spinner"></span>
+        <span class="btn-label">Generate Illustration</span>
+      </button>
+
+    </div>
+  </aside>
+
+  <!-- ═══════════════ CANVAS ═══════════════ -->
+  <main class="canvas-area">
+
+    <div class="canvas-wrapper" id="canvasWrapper">
+
+      <!-- Illustration renders here -->
+      <div class="canvas-content" id="canvasContent"></div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="72" height="72" rx="14" fill="#E8E5DC"/>
+            <path d="M14 52 L26 36 L38 46 L50 30 L62 52Z" fill="#D8D5CC"/>
+            <circle cx="24" cy="26" r="7" fill="#CFCBC0"/>
+            <rect x="14" y="58" width="44" height="2" rx="1" fill="#D8D5CC"/>
+          </svg>
+        </div>
+        <p class="empty-title">Your illustration will appear here</p>
+        <p class="empty-sub">Enter a prompt and click Generate</p>
+      </div>
+
+      <!-- Loading overlay -->
+      <div class="canvas-loading" id="canvasLoading">
+        <div class="big-spinner"></div>
+        <p>Generating illustration…</p>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-banner" id="errorBanner"></div>
+
+    </div>
+
+    <!-- Gallery strip -->
+    <div class="gallery-strip" id="galleryStrip"></div>
+
+  </main>
+
+  <!-- ═══════════════ WEAVY PANEL ═══════════════ -->
+  <div class="weavy-panel" id="weavyPanel">
+    <div class="weavy-inner">
+      <div class="weavy-header">
+        <div>
+          <h3>Team Chat</h3>
+          <div class="weavy-uid-tag" id="weavyUidTag">—</div>
+        </div>
+        <button class="weavy-close-btn" id="weavyCloseBtn" title="Close">✕</button>
+      </div>
+      <div class="weavy-body" id="weavyBody">
+        <div class="weavy-placeholder" id="weavyPlaceholder">
+          <div class="ph-icon">💬</div>
+          <strong>Team Chat Ready</strong>
+          Generate an illustration to start a conversation thread with your team.
+          <br/><br/>
+          <span style="font-size:11px;color:#bbb;">Weavy credentials required for live chat.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<!-- Weavy panel toggle tab -->
+<button class="weavy-tab" id="weavyTab">Chat</button>
+
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════ */
+const state = {
+  category:   'Healthcare',
+  strength:   50,
+  colors:     '3',
+  background: 'fill',
+  size:       '16:9',
+  svg:        null,
+  uid:        null,
+  weavyOpen:  false,
+  weavyCfg:   null,          // { weavyUrl, token } fetched from server
+  illustrations: [],         // { svg, uid, prompt, commentCount }
+  activeIdx:  -1,
+};
+
+/* ══════════════════════════════════════════════════════════════
+   PILL GROUPS (single-select)
+══════════════════════════════════════════════════════════════ */
+function initPills(groupId, stateKey) {
+  const group = document.getElementById(groupId);
+  group.addEventListener('click', e => {
+    const pill = e.target.closest('.pill');
+    if (!pill) return;
+    group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    state[stateKey] = pill.dataset.value;
+  });
+}
+initPills('categoryPills', 'category');
+initPills('colorPills',    'colors');
+initPills('bgPills',       'background');
+initPills('sizePills',     'size');
+
+/* Strength slider */
+document.getElementById('strengthSlider').addEventListener('input', e => {
+  state.strength = +e.target.value;
+});
+
+/* ══════════════════════════════════════════════════════════════
+   GENERATE
+══════════════════════════════════════════════════════════════ */
+const generateBtn   = document.getElementById('generateBtn');
+const canvasContent = document.getElementById('canvasContent');
+const emptyState    = document.getElementById('emptyState');
+const canvasLoading = document.getElementById('canvasLoading');
+const errorBanner   = document.getElementById('errorBanner');
+
+generateBtn.addEventListener('click', generate);
+
+async function generate() {
+  const prompt = document.getElementById('promptInput').value.trim()
+    || 'A family using healthcare services together';
+
+  setGenerating(true);
+  hideError();
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        category:   state.category,
+        strength:   state.strength,
+        colors:     state.colors,
+        size:       state.size,
+        background: state.background,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Server error ${res.status}`);
+    }
+
+    const { svg } = await res.json();
+    if (!svg) throw new Error('Empty SVG returned from server.');
+
+    renderSVG(svg);
+
+    const uid = `illustration-${Date.now()}`;
+    state.svg = svg;
+    state.uid = uid;
+    addToGallery({ svg, uid, prompt, commentCount: 0 });
+    mountWeavyChat(uid);
+
+  } catch (err) {
+    console.error('[generate]', err);
+    showError(err.message);
+    if (!state.svg) showEmptyState(true);
+  } finally {
+    setGenerating(false);
+  }
+}
+
+/* ── UI helpers ─────────────────────────────── */
+function setGenerating(on) {
+  generateBtn.disabled = on;
+  generateBtn.classList.toggle('loading', on);
+  canvasLoading.classList.toggle('visible', on);
+  if (on) showEmptyState(false);
+}
+
+function showEmptyState(show) {
+  emptyState.classList.toggle('hidden', !show);
+}
+
+function showError(msg) {
+  errorBanner.textContent = '⚠ ' + msg;
+  errorBanner.classList.add('visible');
+  setTimeout(hideError, 6000);
+}
+function hideError() { errorBanner.classList.remove('visible'); }
+
+function renderSVG(svgStr) {
+  canvasContent.innerHTML = svgStr;
+  const el = canvasContent.querySelector('svg');
+  if (el) {
+    el.removeAttribute('width');
+    el.removeAttribute('height');
+    el.style.maxWidth  = '100%';
+    el.style.maxHeight = '100%';
+    el.style.display   = 'block';
+  }
+  showEmptyState(false);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GALLERY
+══════════════════════════════════════════════════════════════ */
+const galleryStrip = document.getElementById('galleryStrip');
+
+function addToGallery(item) {
+  state.illustrations.unshift(item);
+  state.activeIdx = 0;
+  renderGallery();
+}
+
+function renderGallery() {
+  galleryStrip.innerHTML = '';
+  state.illustrations.forEach((item, idx) => {
+    const el = document.createElement('div');
+    el.className = 'gallery-item' + (idx === state.activeIdx ? ' active' : '');
+    el.title = item.prompt;
+
+    const thumb = document.createElement('div');
+    thumb.className = 'gallery-thumb';
+    thumb.innerHTML = item.svg;
+    const svgEl = thumb.querySelector('svg');
+    if (svgEl) {
+      svgEl.removeAttribute('width');
+      svgEl.removeAttribute('height');
+    }
+
+    el.appendChild(thumb);
+
+    if (item.commentCount > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'gallery-badge';
+      badge.textContent = item.commentCount;
+      el.appendChild(badge);
+    }
+
+    el.addEventListener('click', () => selectGalleryItem(idx));
+    galleryStrip.appendChild(el);
+  });
+}
+
+function selectGalleryItem(idx) {
+  const item = state.illustrations[idx];
+  if (!item) return;
+  state.activeIdx = idx;
+  state.svg = item.svg;
+  state.uid = item.uid;
+  renderSVG(item.svg);
+  mountWeavyChat(item.uid);
+  renderGallery();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DOWNLOAD
+══════════════════════════════════════════════════════════════ */
+document.getElementById('dlSvg').addEventListener('click', () => {
+  if (!state.svg) return showError('Generate an illustration first.');
+  const blob = new Blob([state.svg], { type: 'image/svg+xml' });
+  triggerDownload(URL.createObjectURL(blob), 'cc-illustration.svg');
+});
+
+document.getElementById('dlPng').addEventListener('click', () => rasterExport('png'));
+document.getElementById('dlJpg').addEventListener('click', () => rasterExport('jpg'));
+
+function triggerDownload(url, name) {
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function rasterExport(fmt) {
+  if (!state.svg) return showError('Generate an illustration first.');
+
+  const canvas = document.createElement('canvas');
+  const img    = new Image();
+
+  // Extract viewBox for canvas dimensions
+  const vbMatch = state.svg.match(/viewBox=["']([^"']+)["']/);
+  let cw = 1600, ch = 900;
+  if (vbMatch) {
+    const p = vbMatch[1].trim().split(/\s+/).map(Number);
+    if (p.length === 4) { cw = p[2]; ch = p[3]; }
+  }
+  canvas.width = cw; canvas.height = ch;
+
+  const blob = new Blob([state.svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+
+  img.onload = () => {
+    const ctx = canvas.getContext('2d');
+    if (fmt === 'jpg') { ctx.fillStyle = '#F0EDE4'; ctx.fillRect(0, 0, cw, ch); }
+    ctx.drawImage(img, 0, 0, cw, ch);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(b => triggerDownload(URL.createObjectURL(b), `cc-illustration.${fmt}`),
+      fmt === 'jpg' ? 'image/jpeg' : 'image/png', 0.95);
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showError('Raster export failed.'); };
+  img.src = url;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WEAVY PANEL
+══════════════════════════════════════════════════════════════ */
+const weavyPanel  = document.getElementById('weavyPanel');
+const weavyTab    = document.getElementById('weavyTab');
+const weavyBody   = document.getElementById('weavyBody');
+const weavyUidTag = document.getElementById('weavyUidTag');
+
+document.getElementById('weavyCloseBtn').addEventListener('click', closeWeavy);
+weavyTab.addEventListener('click', () => state.weavyOpen ? closeWeavy() : openWeavy());
+
+function openWeavy() {
+  state.weavyOpen = true;
+  weavyPanel.classList.add('open');
+  weavyTab.style.right = '360px';
+  if (state.uid) mountWeavyChat(state.uid);
+}
+
+function closeWeavy() {
+  state.weavyOpen = false;
+  weavyPanel.classList.remove('open');
+  weavyTab.style.right = '0';
+}
+
+// Fetch Weavy config once
+async function fetchWeavyCfg() {
+  try {
+    const r = await fetch('/api/weavy-token');
+    const d = await r.json();
+    if (d.configured && d.weavyUrl) {
+      state.weavyCfg = d;
+    }
+  } catch { /* Weavy not configured */ }
+}
+fetchWeavyCfg();
+
+function mountWeavyChat(uid) {
+  weavyUidTag.textContent = uid;
+
+  if (!state.weavyOpen) return;   // defer until panel opens
+
+  const placeholder = document.getElementById('weavyPlaceholder');
+
+  if (!state.weavyCfg) {
+    // Show informational placeholder
+    weavyBody.innerHTML = `
+      <div class="weavy-placeholder">
+        <div class="ph-icon">💬</div>
+        <strong>Chat context: ${uid.split('-').pop()}</strong>
+        Add Weavy credentials in <code>server.js</code> to enable
+        real-time team commenting on illustrations.
+        <code>uid: ${uid}</code>
+      </div>`;
+    return;
+  }
+
+  // Real Weavy — mount wy-context + wy-chat
+  weavyBody.innerHTML = '';
+  const ctx  = document.createElement('wy-context');
+  ctx.setAttribute('url', state.weavyCfg.weavyUrl);
+  ctx.setAttribute('tokenurl', '/api/weavy-token');
+  ctx.style.cssText = 'display:block;height:100%;';
+
+  const chat = document.createElement('wy-chat');
+  chat.setAttribute('uid', uid);
+  chat.setAttribute('name', `Illustration ${uid.split('-').pop()}`);
+  chat.style.cssText = 'display:block;height:100%;';
+
+  ctx.appendChild(chat);
+  weavyBody.appendChild(ctx);
+}
+</script>
+</body>
+</html>
